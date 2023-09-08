@@ -1,0 +1,73 @@
+---
+title: "Data607_Assignment_1"
+author: "Shaya Engelman"
+date: "2023-09-04"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(knitr)
+library(gt)
+library(ggplot2)
+library(readr)
+```
+
+## The rising age of Congress members
+
+The United States Congress represents the citizens of the United States. As such, they are expected to be representative of the average American citizen. However due to obvious factors like the need to gain the skill, knowledge, temperament and name recognition necessary to run for and win an election, the average age of Congress members has always been older than the average American. Due to the high population growth during the Boomer generation this has led to the current congress being the oldest one in history. More information can be found in the following article:
+
+<https://fivethirtyeight.com/features/aging-congress-boomers/>:
+
+```{r age-of-congress}
+#Let's shorten this table by averaging the age of the entire Congress per session
+aging_congress <- read.csv("https://raw.githubusercontent.com/fivethirtyeight/data/master/congress-demographics/data_aging_congress.csv")
+aging_congress_subset <- aging_congress[c(1,3,11,12)]
+glimpse(aging_congress_subset)
+
+```
+
+The code above gives us the dimensions of the large dataset. That dataset is extremely large and is not easily read. However, using the dplyr :: glimpse function we can see it's dimensions. We can see it has 4 columns and 29,120 rows. Those columns represent the number Congress they served in, the specific chamber of Congress they were part of, the age they were at the time in days and, finally, the age they were in years. The rows are all the different congressmen collected.
+
+Since the above dataset is too large to print and easily read, we can try making a smaller table to help us be able to take a look at this data.
+
+```{r average-age-table}
+average_age_congress <- aggregate(age_years ~ congress, aging_congress_subset, mean)
+kable(average_age_congress,
+      row.names = TRUE,
+      col.names = c("# Congress", "Average Age"),
+      table.attr = "style='width:30%;'")
+
+```
+
+This table is still a little long to scan quickly so we can shorten that into a table showing only every fifth Congress. Hopefully, this will still pretty much match the trend of the full table.
+
+```{r subset average}
+subset_average <- average_age_congress %>% slice(which(row_number() %% 3 == 1))
+
+kable(subset_average,
+      row.names = TRUE,
+      col.names = c("# Congress", "Average Age"),
+      table.attr = "style='width:30%;'")
+```
+
+We can now plot both those tables to see if their trend is the same or if we lost too much by trimming this data.
+
+```{r plot}
+#we can plot these tables to see their trend
+ggplot(data = average_age_congress, mapping = aes(x = congress, y = age_years)) +
+  geom_point()
+
+ggplot(data = subset_average, mapping = aes(x = congress, y = age_years)) +
+  geom_point()
+
+```
+
+Using the above tables and plots we can easily see that while at the beginning of the collected data the average age of Congress stayed within a certain range, recently that number has been rising fast. This can be due to a variety of reasons but is likely due to the huge population jump during the Boomer generation. Assuming this is indeed a major contributing factor, we can expect this number to come down as the Boomer generation loses their impact on the vote.
+
+The ramifications of an older Congress can be quite large. We live in a world evolving very at a very rapid pace. Older people typically have a lower understanding of new technology. As those new technologies become a bigger part of our lives, we would prefer the people representing us in government would understand them.
+
+Sources:
+
+[data/congress-demographics at master · fivethirtyeight/data (github.com)](https://github.com/fivethirtyeight/data/tree/master/congress-demographics)
